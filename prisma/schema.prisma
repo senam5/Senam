@@ -9,6 +9,21 @@ datasource db {
 
 // ── Shared ──────────────────────────────────────────────────────────
 
+// Single source of truth for "where is the shop" — pickup/delivery fees
+// must be computed as distance FROM this address, not whatever ad-hoc
+// origin the booking flow was using before (that's what made the fee
+// skewed). One row per venture that does pickup/delivery.
+model ShopLocation {
+  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture Venture @unique
+  name    String
+  address String
+  lat     Decimal? @db.Decimal(9, 6)
+  lng     Decimal? @db.Decimal(9, 6)
+
+  @@map("shop_location")
+}
+
 enum Venture {
   LE_SHOE_SHOP
   CUIR_ESTHETICA
@@ -122,6 +137,8 @@ model Order {
 
   campaign   Campaign? @relation(fields: [campaignId], references: [id])
   campaignId String?   @map("campaign_id") @db.Uuid
+
+  notes String? // delivery specifications/instructions — visible to deliverers, no $ involved
 
   subtotal          Decimal @db.Decimal(8, 2)
   volumeDiscountPct Decimal @default(0) @map("volume_discount_pct") @db.Decimal(4, 2)
