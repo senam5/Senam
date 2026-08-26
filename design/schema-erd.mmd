@@ -1,0 +1,215 @@
+erDiagram
+    %% ── Shared / scheduling ──────────────────────────────
+    ShopLocation {
+        uuid id PK
+        Venture venture
+        string address
+    }
+    AvailabilitySlot {
+        uuid id PK
+        Venture venture
+        Weekday weekday
+        string start_time
+        string end_time
+        bool active
+    }
+    Subcontractor {
+        uuid id PK
+        Venture venture
+        string name
+        decimal commission
+    }
+    SubcontractorInvoice {
+        uuid id PK
+        uuid subcontractor_id FK
+        string invoice_number
+        decimal amount
+        decimal km_driven
+        InvoiceStatus status
+    }
+
+    %% ── Sales domain ─────────────────────────────────────
+    Customer {
+        uuid id PK
+        Venture venture
+        string name
+        string phone
+        string address
+    }
+    Order {
+        uuid id PK
+        uuid customer_id FK
+        uuid runner_id FK
+        uuid campaign_id FK
+        ServiceTier tier
+        OrderStatus status
+        decimal total
+        timestamp pickup_scheduled_at
+    }
+    OrderItem {
+        uuid id PK
+        uuid order_id FK
+        uuid product_id FK
+        OrderItemType type
+        decimal price
+    }
+    Product {
+        uuid id PK
+        string sku
+        string name
+        decimal price
+    }
+    ProductOrder {
+        uuid id PK
+        uuid customer_id FK
+        ProductOrderStatus status
+        decimal total
+    }
+    ProductOrderItem {
+        uuid id PK
+        uuid product_order_id FK
+        uuid product_id FK
+        int quantity
+    }
+    Payment {
+        uuid id PK
+        uuid order_id FK
+        PaymentKind kind
+        decimal amount
+        string stripe_payment_id
+    }
+
+    %% ── Payables / stock ──────────────────────────────────
+    Vendor {
+        uuid id PK
+        string name
+        string currency
+    }
+    StockItem {
+        uuid id PK
+        uuid vendor_id FK
+        string name
+        decimal par_level
+        decimal current_qty
+        ServiceTier_array tiers_consumed_by
+    }
+    Requisition {
+        uuid id PK
+        uuid stock_item_id FK
+        uuid purchase_order_id FK
+        decimal quantity
+    }
+    PurchaseOrder {
+        uuid id PK
+        uuid vendor_id FK
+        PayableStatus status
+    }
+    PurchaseOrderItem {
+        uuid id PK
+        uuid purchase_order_id FK
+        uuid stock_item_id FK
+        decimal unit_price
+    }
+    Payable {
+        uuid id PK
+        uuid purchase_order_id FK
+        decimal amount
+        PayableStatus status
+    }
+
+    %% ── Expense reconciliation ────────────────────────────
+    Expense {
+        uuid id PK
+        uuid game_id FK
+        Venture venture
+        decimal total_paid
+        PaymentSource payment_source
+        DeductibleStatus deductible
+        bool reimbursed
+    }
+    InterVentureTransfer {
+        uuid id PK
+        Venture from_venture
+        Venture to_venture
+        decimal amount
+    }
+    OwnerLoan {
+        uuid id PK
+        Venture venture
+        decimal amount
+        decimal amount_accounted_for
+        bool repaid
+    }
+
+    %% ── Sponsorship ────────────────────────────────────────
+    SponsorshipDeal {
+        uuid id PK
+        Venture sponsor_venture
+        Venture sponsored_venture
+        decimal amount
+        string branding_line
+        SponsorshipStatus status
+    }
+    SponsorshipDeliverable {
+        uuid id PK
+        uuid deal_id FK
+        string description
+        bool completed
+    }
+    SponsorshipReachSnapshot {
+        uuid id PK
+        uuid deal_id FK
+        int unique_viewers
+        int total_views
+    }
+    Game {
+        uuid id PK
+        uuid sponsorship_deal_id FK
+        string description
+        decimal media_cost
+        decimal sponsor_amount
+        bool branding_included
+    }
+
+    %% ── Marketing attribution ─────────────────────────────
+    Campaign {
+        uuid id PK
+        uuid sponsorship_deal_id FK
+        CampaignChannel channel
+        decimal budget
+    }
+    AdSpend {
+        uuid id PK
+        uuid campaign_id FK
+        decimal amount
+    }
+
+    %% ── Relationships ─────────────────────────────────────
+    Customer ||--o{ Order : places
+    Customer ||--o{ ProductOrder : places
+    Order ||--o{ OrderItem : contains
+    Order ||--o{ Payment : "paid via"
+    Order }o--o| Subcontractor : "delivered by"
+    Order }o--o| Campaign : "attributed to"
+    Product ||--o{ OrderItem : "sold as add-on in"
+    Product ||--o{ ProductOrderItem : "sold as"
+    ProductOrder ||--o{ ProductOrderItem : contains
+
+    Subcontractor ||--o{ SubcontractorInvoice : submits
+
+    Vendor ||--o{ PurchaseOrder : fulfills
+    Vendor ||--o{ StockItem : supplies
+    PurchaseOrder ||--o{ PurchaseOrderItem : contains
+    PurchaseOrder ||--|| Payable : owes
+    PurchaseOrder ||--o{ Requisition : fulfills
+    StockItem ||--o{ Requisition : requested
+    StockItem ||--o{ PurchaseOrderItem : ordered
+
+    Game ||--o{ Expense : "media cost logged as"
+    SponsorshipDeal ||--o{ Game : sponsors
+    SponsorshipDeal ||--o{ SponsorshipDeliverable : promises
+    SponsorshipDeal ||--o{ SponsorshipReachSnapshot : justified_by
+    SponsorshipDeal ||--o{ Campaign : funds
+
+    Campaign ||--o{ AdSpend : tracks
+    Campaign ||--o{ Order : attributes

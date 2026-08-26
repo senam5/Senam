@@ -12,6 +12,12 @@ training app — shots, runs, attendance). This project intentionally does
 crosses into Le Shoe Shop (sponsorship, the fund-flush debt, shared
 subcontractors).
 
+**Schema diagram**: `design/schema-erd.png` / `.pdf` (source:
+`design/schema-erd.mmd`, a Mermaid ER diagram — regenerate with
+`mmdc -i design/schema-erd.mmd -o design/schema-erd.png` after schema
+changes if you want it to stay current; it's illustrative, not
+auto-synced).
+
 ## Setup
 
 ```bash
