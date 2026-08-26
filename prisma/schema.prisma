@@ -24,9 +24,48 @@ model Subcontractor {
   phone      String?
   commission Decimal? @db.Decimal(5, 2) // percentage
   orders     Order[]  @relation("SubcontractorRuns")
+  invoices   SubcontractorInvoice[]
   createdAt  DateTime @default(now()) @map("created_at")
 
   @@map("subcontractor")
+}
+
+// Subcontractors (Neil, coaches, media team, etc.) are contractors, not
+// employees — they submit an invoice for work done; the owner approves
+// and pays it. Mirrors the "Invoice #100 — Coach Felix" style entries
+// already used informally in the Lions Notion ledger, generalized so any
+// subcontractor across any venture can submit one the same way.
+
+enum InvoiceStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+  PAID
+}
+
+model SubcontractorInvoice {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  subcontractor   Subcontractor @relation(fields: [subcontractorId], references: [id])
+  subcontractorId String        @map("subcontractor_id") @db.Uuid
+  venture         Venture
+  invoiceNumber   String        @map("invoice_number")
+  issuedOn        DateTime      @map("issued_on") @db.Date
+  amount          Decimal       @db.Decimal(10, 2) // total invoiced, service fee + km (if any)
+  kmDriven        Decimal?      @map("km_driven") @db.Decimal(8, 2)
+  kmRate          Decimal?      @map("km_rate") @db.Decimal(6, 3) // $/km, so the km portion of amount is auditable
+  description     String? // what work/service this covers
+  attachmentPath  String?       @map("attachment_path") // Supabase Storage path — the actual invoice file, one copy both sides can retrieve
+  status          InvoiceStatus @default(SUBMITTED)
+  submittedAt     DateTime      @default(now()) @map("submitted_at")
+  approvedAt      DateTime?     @map("approved_at")
+  paidAt          DateTime?     @map("paid_at")
+  rejectionReason String?       @map("rejection_reason")
+  notes           String?
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@unique([subcontractorId, invoiceNumber])
+  @@index([venture, status])
+  @@map("subcontractor_invoice")
 }
 
 // ── Sales domain ────────────────────────────────────────────────────
@@ -316,6 +355,26 @@ model InterVentureTransfer {
   createdAt     DateTime @default(now()) @map("created_at")
 
   @@map("inter_venture_transfer")
+}
+
+// The reverse of Expense: money the OWNER took out of a venture's account
+// (a cash flush, a withdrawal) that they intend to pay back or reinvest —
+// a personal debt to the business, not a business debt to the owner.
+// amountAccountedFor + notes track partial reconciliation honestly instead
+// of forcing a number that isn't actually known yet.
+model OwnerLoan {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture             Venture // the venture the money was taken from
+  amount              Decimal   @db.Decimal(10, 2) // total taken
+  amountAccountedFor  Decimal   @default(0) @map("amount_accounted_for") @db.Decimal(10, 2) // spent on the venture's behalf or repaid so far
+  takenOn             DateTime  @map("taken_on") @db.Date
+  reason              String?
+  repaid              Boolean   @default(false)
+  repaidAt            DateTime? @map("repaid_at")
+  notes               String?
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  @@map("owner_loan")
 }
 
 // ── Sponsorship ───────────────────────────────────────────────────────
