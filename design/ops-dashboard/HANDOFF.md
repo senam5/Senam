@@ -35,7 +35,7 @@ those tabs as:
 | Produits | `Product` (the boutique catalog) — and probably where par-level inventory (`StockItem`) belongs too, even though those are conceptually different (sellable products vs. internal consumables) |
 | Driver | The deliverer-facing view — see its own section below |
 | Calendrier | `AvailabilitySlot` — weekly recurring pickup availability, see below |
-| Galerie | Likely the Renew tier's before/after photos — no model for this exists yet; flag back if it needs one (e.g. photo URLs on `Order` or `OrderItem`) |
+| Galerie | Before/after photos — simple enough that it doesn't need a model from this project; build it however fits the rest of the admin (e.g. a Storage bucket + a simple upload UI) |
 | Dashboard | The ops overview from this brief — orders pipeline + inventory par levels + deliveries |
 
 ## Design reference
