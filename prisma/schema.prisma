@@ -294,6 +294,8 @@ model Expense {
   deductible    DeductibleStatus?
   reimbursed    Boolean           @default(false)
   reimbursedAt  DateTime?         @map("reimbursed_at")
+  game          Game?             @relation(fields: [gameId], references: [id])
+  gameId        String?           @map("game_id") @db.Uuid
   notes         String?
   createdAt     DateTime          @default(now()) @map("created_at")
 
@@ -342,10 +344,12 @@ model SponsorshipDeal {
   status           SponsorshipStatus @default(PROPOSED)
   paid             Boolean           @default(false)
   paidAt           DateTime?         @map("paid_at")
+  brandingLine     String?           @map("branding_line") // e.g. "Lions Basketball powered by Le Shoe Shop"
   notes            String?
   deliverables     SponsorshipDeliverable[]
   reachSnapshots   SponsorshipReachSnapshot[]
   campaigns        Campaign[]
+  games            Game[]
   createdAt        DateTime          @default(now()) @map("created_at")
 
   @@index([sponsorVenture, sponsoredVenture, status])
@@ -381,6 +385,31 @@ model SponsorshipReachSnapshot {
   createdAt     DateTime        @default(now()) @map("created_at")
 
   @@map("sponsorship_reach_snapshot")
+}
+
+// ── Per-game sponsorship ──────────────────────────────────────────────
+// A Game is the actual content-cost unit: what it cost Lions' media
+// team to produce content for one game. Sponsoring a Game (covering
+// its mediaCost, at sponsorAmount) is what flips brandingIncluded to
+// true — everything produced from that game carries the sponsor's
+// branding, one row instead of a per-piece negotiation each time.
+
+model Game {
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture           Venture // e.g. LIONS_BASKETBALL
+  description       String // e.g. "vs Cegep Levis", "SLC vs UK Cut"
+  playedOn          DateTime         @map("played_on") @db.Date
+  mediaCost         Decimal?         @map("media_cost") @db.Decimal(10, 2) // actual cost to produce this game's content
+  sponsorshipDeal   SponsorshipDeal? @relation(fields: [sponsorshipDealId], references: [id])
+  sponsorshipDealId String?          @map("sponsorship_deal_id") @db.Uuid
+  sponsorAmount     Decimal?         @map("sponsor_amount") @db.Decimal(10, 2) // what the sponsor actually covered for this game
+  brandingIncluded  Boolean          @default(false) @map("branding_included")
+  expenses          Expense[]
+  notes             String?
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  @@index([venture, playedOn])
+  @@map("game")
 }
 
 // ── Marketing attribution ─────────────────────────────────────────────
