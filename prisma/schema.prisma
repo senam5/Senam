@@ -35,6 +35,10 @@ model Subcontractor {
 // and pays it. Mirrors the "Invoice #100 — Coach Felix" style entries
 // already used informally in the Lions Notion ledger, generalized so any
 // subcontractor across any venture can submit one the same way.
+//
+// kmDriven/kmRate are for the subcontractor's OWN income tax records
+// (self-employed mileage deduction) — logging it here doesn't mean
+// Le Shoe Shop pays for it; `amount` is the only figure that gets paid.
 
 enum InvoiceStatus {
   SUBMITTED
@@ -50,9 +54,9 @@ model SubcontractorInvoice {
   venture         Venture
   invoiceNumber   String        @map("invoice_number")
   issuedOn        DateTime      @map("issued_on") @db.Date
-  amount          Decimal       @db.Decimal(10, 2) // total invoiced, service fee + km (if any)
-  kmDriven        Decimal?      @map("km_driven") @db.Decimal(8, 2)
-  kmRate          Decimal?      @map("km_rate") @db.Decimal(6, 3) // $/km, so the km portion of amount is auditable
+  amount          Decimal       @db.Decimal(10, 2) // what Le Shoe Shop actually pays — km is NOT assumed to be included
+  kmDriven        Decimal?      @map("km_driven") @db.Decimal(8, 2) // for the subcontractor's own records — CRA/RQ self-employment mileage deduction, not necessarily billed here
+  kmRate          Decimal?      @map("km_rate") @db.Decimal(6, 3) // $/km reference rate, e.g. the CRA per-km rate, for their own deduction math
   description     String? // what work/service this covers
   attachmentPath  String?       @map("attachment_path") // Supabase Storage path — the actual invoice file, one copy both sides can retrieve
   status          InvoiceStatus @default(SUBMITTED)

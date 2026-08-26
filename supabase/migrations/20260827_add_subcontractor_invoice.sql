@@ -1,3 +1,6 @@
+-- km_driven/km_rate are for the subcontractor's OWN income tax records
+-- (self-employed mileage deduction) — logging it here doesn't mean
+-- Le Shoe Shop pays for it; `amount` is the only figure that gets paid.
 create type invoice_status as enum ('SUBMITTED','APPROVED','REJECTED','PAID');
 
 create table subcontractor_invoice (
