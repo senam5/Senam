@@ -1,0 +1,85 @@
+erDiagram
+    ShopLocation {
+        uuid id PK
+        Venture venture
+        string address
+    }
+    AvailabilitySlot {
+        uuid id PK
+        Venture venture
+        Weekday weekday
+        string start_time
+        string end_time
+        bool active
+    }
+    Subcontractor {
+        uuid id PK
+        Venture venture
+        string name
+    }
+    Customer {
+        uuid id PK
+        Venture venture
+        string name
+        string phone
+        string address
+    }
+    Order {
+        uuid id PK
+        uuid customer_id FK
+        uuid runner_id FK
+        ServiceTier tier
+        OrderStatus status
+        decimal total
+        string notes
+        timestamp pickup_scheduled_at
+    }
+    OrderItem {
+        uuid id PK
+        uuid order_id FK
+        uuid product_id FK
+        OrderItemType type
+        decimal price
+    }
+    Payment {
+        uuid id PK
+        uuid order_id FK
+        PaymentKind kind
+        decimal amount
+        string stripe_payment_id
+    }
+    Product {
+        uuid id PK
+        string sku
+        string name
+        decimal price
+    }
+    ProductOrder {
+        uuid id PK
+        uuid customer_id FK
+        ProductOrderStatus status
+        decimal total
+    }
+    ProductOrderItem {
+        uuid id PK
+        uuid product_order_id FK
+        uuid product_id FK
+        int quantity
+    }
+    StockItem {
+        uuid id PK
+        string name
+        decimal par_level
+        decimal current_qty
+        ServiceTier_array tiers_consumed_by
+    }
+
+    Customer ||--o{ Order : places
+    Customer ||--o{ ProductOrder : places
+    Order ||--o{ OrderItem : contains
+    Order ||--o{ Payment : "paid via"
+    Order }o--o| Subcontractor : "delivered by"
+    Product ||--o{ OrderItem : "sold as add-on in"
+    Product ||--o{ ProductOrderItem : "sold as"
+    ProductOrder ||--o{ ProductOrderItem : contains
+    AvailabilitySlot ||--o{ Order : "resolves into pickup_scheduled_at"
