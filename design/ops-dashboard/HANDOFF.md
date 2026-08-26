@@ -34,7 +34,7 @@ those tabs as:
 | Clients | `Customer` |
 | Produits | `Product` (the boutique catalog) — and probably where par-level inventory (`StockItem`) belongs too, even though those are conceptually different (sellable products vs. internal consumables) |
 | Driver | The deliverer-facing view — see its own section below |
-| Calendrier | Delivery/pickup scheduling — no dedicated model for this yet, likely derived from `Order.bookedAt`/status dates until a real scheduling concept is needed |
+| Calendrier | `AvailabilitySlot` — weekly recurring pickup availability, see below |
 | Galerie | Likely the Renew tier's before/after photos — no model for this exists yet; flag back if it needs one (e.g. photo URLs on `Order` or `OrderItem`) |
 | Dashboard | The ops overview from this brief — orders pipeline + inventory par levels + deliveries |
 
@@ -166,6 +166,26 @@ mockup invented zone grouping (Sainte-Foy, Lévis, etc.) from
 column to query. If zone-grouped deliveries are wanted for real, that's
 a schema addition, not something to fake client-side. Flag it back
 rather than guessing a parsing scheme.
+
+## Calendrier — weekly recurring availability
+
+**This replaces whatever date-based calendar exists now.** Pickup
+availability is a repeating weekly pattern (e.g. "Tuesdays 2-5pm,
+Thursdays 10am-1pm"), not a set of specific calendar dates — set it once
+and it applies every week going forward, no re-entering dates.
+
+```
+GET /availability_slot?venture=eq.LE_SHOE_SHOP&active=eq.true&select=*
+```
+
+`weekday` is `MONDAY`...`SUNDAY`, `start_time`/`end_time` are `"HH:MM"`
+24h strings. The booking UI resolves a customer's pick (a specific
+weekday + time within an active slot) into an actual calendar date for
+that particular week, and writes it to `order.pickup_scheduled_at`
+(a real timestamp, since one specific order happens on one specific
+date even though the availability pattern repeats). Owner manages the
+weekly pattern by inserting/toggling `active` on rows in
+`availability_slot` — no per-week maintenance needed.
 
 ## Deliverer-facing view
 

@@ -24,6 +24,33 @@ model ShopLocation {
   @@map("shop_location")
 }
 
+// Weekly recurring pickup availability (Calendrier) — no specific dates.
+// Set once (e.g. "Tuesdays 2-5pm, Thursdays 10am-1pm") and it repeats
+// every week; customers pick a slot from whatever's marked active.
+// Deliberately NOT date-based — that was the old model being replaced.
+enum Weekday {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+model AvailabilitySlot {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture   Venture
+  weekday   Weekday
+  startTime String   @map("start_time") @db.VarChar(5) // "HH:MM", 24h
+  endTime   String   @map("end_time") @db.VarChar(5)
+  active    Boolean  @default(true)
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("availability_slot")
+}
+
 enum Venture {
   LE_SHOE_SHOP
   CUIR_ESTHETICA
@@ -140,6 +167,7 @@ model Order {
   campaignId String?   @map("campaign_id") @db.Uuid
 
   notes String? // delivery specifications/instructions — visible to deliverers, no $ involved
+  pickupScheduledAt DateTime? @map("pickup_scheduled_at") // the actual date+time picked, resolved against an AvailabilitySlot
 
   subtotal          Decimal @db.Decimal(8, 2)
   volumeDiscountPct Decimal @default(0) @map("volume_discount_pct") @db.Decimal(4, 2)
