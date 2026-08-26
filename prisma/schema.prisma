@@ -113,6 +113,7 @@ model Customer {
   phone     String?
   address   String?
   orders    Order[]
+  productOrders ProductOrder[]
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("customer")
@@ -179,15 +180,60 @@ model OrderItem {
 }
 
 model Product {
-  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  venture    Venture
-  sku        String      @unique
-  name       String
-  price      Decimal     @db.Decimal(8, 2)
-  category   String
-  orderItems OrderItem[]
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture            Venture
+  sku                String              @unique
+  name               String
+  price              Decimal             @db.Decimal(8, 2)
+  category           String
+  orderItems         OrderItem[]
+  productOrderItems  ProductOrderItem[]
 
   @@map("product")
+}
+
+// Standalone product sales (admin's "Commandes" tab) — someone buying a
+// cleaner/pack/laces with no cleaning service booked. Deliberately NOT
+// modeled as an Order: Order requires a ServiceTier and pairCount that
+// don't apply here, and forcing it in would mean nullable fields that
+// are meaningless most of the time. This is the "Bookings" (Order) tab's
+// sibling, not a variant of it.
+
+enum ProductOrderStatus {
+  PENDING
+  PAID
+  FULFILLED
+  CANCELLED
+}
+
+model ProductOrder {
+  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture    Venture
+  customer   Customer           @relation(fields: [customerId], references: [id])
+  customerId String             @map("customer_id") @db.Uuid
+  status     ProductOrderStatus @default(PENDING)
+  items      ProductOrderItem[]
+  subtotal   Decimal            @db.Decimal(8, 2)
+  tps        Decimal            @db.Decimal(8, 2)
+  tvq        Decimal            @db.Decimal(8, 2)
+  total      Decimal            @db.Decimal(8, 2)
+  orderedAt  DateTime           @default(now()) @map("ordered_at")
+  paidAt     DateTime?          @map("paid_at")
+  fulfilledAt DateTime?         @map("fulfilled_at")
+
+  @@map("product_order")
+}
+
+model ProductOrderItem {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productOrder   ProductOrder @relation(fields: [productOrderId], references: [id])
+  productOrderId String       @map("product_order_id") @db.Uuid
+  product        Product      @relation(fields: [productId], references: [id])
+  productId      String       @map("product_id") @db.Uuid
+  quantity       Int          @default(1)
+  price          Decimal      @db.Decimal(8, 2)
+
+  @@map("product_order_item")
 }
 
 enum PaymentKind {

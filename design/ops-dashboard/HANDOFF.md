@@ -21,6 +21,23 @@ yet, leave them alone. Don't build UI for `sponsorship_deal`,
 `sponsorship_deliverable`, `sponsorship_reach_snapshot`, `game`,
 `expense`, or `owner_loan`.
 
+## Mapping onto the existing admin nav
+
+The admin already has: Dashboard · Bookings · Clients · Calendrier ·
+Produits · Commandes · Driver · Galerie. This project's models map onto
+those tabs as:
+
+| Tab | Model(s) |
+|---|---|
+| Bookings | `Order` / `OrderItem` / `Payment` — the cleaning service pipeline (Refresh/Reset/Renew) |
+| Commandes | `ProductOrder` / `ProductOrderItem` — **standalone product sales** (buying a cleaner/pack with no service booked). Deliberately a separate model from `Order`, not a variant of it — see below. |
+| Clients | `Customer` |
+| Produits | `Product` (the boutique catalog) — and probably where par-level inventory (`StockItem`) belongs too, even though those are conceptually different (sellable products vs. internal consumables) |
+| Driver | The deliverer-facing view — see its own section below |
+| Calendrier | Delivery/pickup scheduling — no dedicated model for this yet, likely derived from `Order.bookedAt`/status dates until a real scheduling concept is needed |
+| Galerie | Likely the Renew tier's before/after photos — no model for this exists yet; flag back if it needs one (e.g. photo URLs on `Order` or `OrderItem`) |
+| Dashboard | The ops overview from this brief — orders pipeline + inventory par levels + deliveries |
+
 ## Design reference
 
 Static concept: `Main.dc.html` in this folder, also viewable at
@@ -62,11 +79,18 @@ here anyway).
 **`order`'s dollar columns are blocked at the database level for the
 anon key**, not just hidden by convention — `subtotal`, `tps`, `tvq`,
 `total`, `pickup_fee`, `volume_discount_pct` will error with "permission
-denied" if queried with this key. This is deliberate (see Deliverer view
-below) — don't try to work around it by adding a view that re-exposes
-them to anon; if the owner-facing dashboard needs totals, that's a
-service-role/authenticated concern, flag it back rather than loosening
-the grant.
+denied" if queried with this key. `product_order` has the same treatment
+(`total`/`subtotal`/`tps`/`tvq` blocked, `status`/dates readable). This
+is deliberate (see Deliverer view below) — don't try to work around it
+by adding a view that re-exposes them to anon; if the owner-facing
+dashboard needs totals, that's a service-role/authenticated concern.
+
+**This whole anon-key access model is a placeholder**, not a design to
+extend. It exists only because no real auth is built yet. Once you build
+real authentication/authorization for the admin, replace this entirely
+rather than adding more anon-key column grants for new tables — treat
+every grant currently on `anon` as scaffolding to remove, not a pattern
+to follow.
 
 **No auth exists yet.** This was fine to open up because `customer`/
 `order` are still empty at time of writing (0 rows). Before real
@@ -98,6 +122,15 @@ schema change needed:
   tier's price. That recompute is application logic — there's no DB
   trigger doing it automatically, so whichever screen handles "upgrade
   this order" needs to do the math and write all four fields together.
+
+**Commandes (product sales, separate from Bookings)** —
+```
+GET /product_order?select=*,customer(name),product_order_item(*,product(name,sku))&order=ordered_at.desc
+```
+`status` is `PENDING` | `PAID` | `FULFILLED` | `CANCELLED`. This is a
+**separate model from `Order`** on purpose — a product-only purchase has
+no `ServiceTier`, no pair count, no pickup/delivery. Don't try to
+represent it as an `Order` with nulled-out fields.
 
 **Inventory** —
 ```
