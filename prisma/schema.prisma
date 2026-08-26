@@ -1,0 +1,235 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Shared ──────────────────────────────────────────────────────────
+
+enum Venture {
+  LE_SHOE_SHOP
+  CUIR_ESTHETICA
+  LIONS_BASKETBALL
+  SHARED_WORKSPACE
+}
+
+model Subcontractor {
+  id          String   @id @default(cuid())
+  venture     Venture
+  name        String
+  email       String?
+  phone       String?
+  commission  Decimal  @db.Decimal(5, 2) // percentage
+  orders      Order[]  @relation("SubcontractorRuns")
+  createdAt   DateTime @default(now())
+}
+
+// ── Sales domain ────────────────────────────────────────────────────
+
+enum ServiceTier {
+  REFRESH
+  RESET
+  RENEW
+}
+
+enum OrderStatus {
+  PENDING
+  DEPOSIT_PAID
+  IN_PROGRESS
+  CLEANED
+  DELIVERED
+  PAID
+  CANCELLED
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  venture   Venture
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  orders    Order[]
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id                  String         @id @default(cuid())
+  venture             Venture
+  customer            Customer       @relation(fields: [customerId], references: [id])
+  customerId          String
+  tier                ServiceTier
+  pairCount           Int            @default(1)
+  status              OrderStatus    @default(PENDING)
+
+  pickupDistanceKm    Decimal?       @db.Decimal(5, 2)
+  pickupFee           Decimal        @default(0) @db.Decimal(6, 2)
+
+  runner              Subcontractor? @relation("SubcontractorRuns", fields: [runnerId], references: [id])
+  runnerId            String?
+
+  referralSource      String?
+
+  subtotal            Decimal        @db.Decimal(8, 2)
+  volumeDiscountPct   Decimal        @default(0) @db.Decimal(4, 2)
+  tps                 Decimal        @db.Decimal(8, 2) // 5%, formula-derived — don't hardcode
+  tvq                 Decimal        @db.Decimal(8, 2) // 9.975%, formula-derived — don't hardcode
+  total               Decimal        @db.Decimal(8, 2)
+
+  items               OrderItem[]
+  payments            Payment[]
+
+  bookedAt            DateTime       @default(now())
+  depositPaidAt       DateTime?
+  cleanedAt           DateTime?
+  deliveredAt         DateTime?
+  paidAt              DateTime?
+
+  @@index([venture, tier, bookedAt])
+}
+
+enum OrderItemType {
+  ADDON
+  PRODUCT
+}
+
+model OrderItem {
+  id        String        @id @default(cuid())
+  order     Order         @relation(fields: [orderId], references: [id])
+  orderId   String
+  type      OrderItemType
+  code      String        // e.g. extra_laces, insoles, sole_repair, or Product.sku
+  product   Product?      @relation(fields: [productId], references: [id])
+  productId String?
+  quantity  Int           @default(1)
+  price     Decimal       @db.Decimal(8, 2)
+}
+
+model Product {
+  id        String      @id @default(cuid())
+  venture   Venture
+  sku       String      @unique
+  name      String
+  price     Decimal     @db.Decimal(8, 2)
+  category  String
+  orderItems OrderItem[]
+}
+
+enum PaymentKind {
+  DEPOSIT
+  BALANCE
+  FULL
+}
+
+model Payment {
+  id                String      @id @default(cuid())
+  order             Order       @relation(fields: [orderId], references: [id])
+  orderId           String
+  kind              PaymentKind
+  amount            Decimal     @db.Decimal(8, 2)
+  stripePaymentId   String?
+  paidAt            DateTime    @default(now())
+}
+
+// ── Payables domain ─────────────────────────────────────────────────
+
+enum PayableStatus {
+  PLANNED
+  PO_ISSUED
+  AWAITING_DELIVERY
+  RECEIVED
+  PAID
+}
+
+model Vendor {
+  id          String            @id @default(cuid())
+  venture     Venture
+  name        String
+  contact     String?
+  currency    String            @default("CAD") // e.g. CNY for equipment vendors — never assume CAD
+  leadTimeDays Int?
+  purchaseOrders PurchaseOrder[]
+  stockItems  StockItem[]
+}
+
+model Requisition {
+  id          String        @id @default(cuid())
+  venture     Venture
+  stockItem   StockItem?    @relation(fields: [stockItemId], references: [id])
+  stockItemId String?
+  description String
+  quantity    Decimal       @db.Decimal(8, 2)
+  requestedBy String?
+  purchaseOrder PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+  purchaseOrderId String?
+  createdAt   DateTime      @default(now())
+}
+
+model PurchaseOrder {
+  id            String              @id @default(cuid())
+  venture       Venture
+  vendor        Vendor              @relation(fields: [vendorId], references: [id])
+  vendorId      String
+  status        PayableStatus       @default(PLANNED)
+  currency      String              @default("CAD")
+  issuedAt      DateTime?
+  expectedAt    DateTime?
+  receivedAt    DateTime?
+  requisitions  Requisition[]
+  items         PurchaseOrderItem[]
+  payable       Payable?
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  purchaseOrderId String
+  stockItem       StockItem?    @relation(fields: [stockItemId], references: [id])
+  stockItemId     String?
+  description     String
+  quantityUnits   Decimal?      @db.Decimal(10, 2) // e.g. pairs, bottles
+  quantityLiters  Decimal?      @db.Decimal(10, 2) // e.g. 40L leather product orders
+  unitPrice       Decimal       @db.Decimal(10, 2)
+}
+
+model Payable {
+  id              String        @id @default(cuid())
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  purchaseOrderId String        @unique
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String        @default("CAD")
+  status          PayableStatus @default(PLANNED)
+  dueAt           DateTime?
+  paidAt          DateTime?
+}
+
+// ── Stock / par levels ──────────────────────────────────────────────
+// Par level = floor to reorder at, independent of demand forecasting.
+// currentQty is nudged by whatever counting process you actually run
+// (weekly walk-through, or decremented from OrderItem/tier consumption
+// once that's worth automating). tiersConsumedBy documents which
+// ServiceTiers draw down this item, so par levels can be recalculated
+// straight from Order.tier volume once a few weeks of real data exist —
+// no manual usage tracking required in the meantime.
+
+model StockItem {
+  id                String          @id @default(cuid())
+  venture           Venture
+  name              String
+  category          String
+  unit              String          // "pairs", "bottles", "units"
+  parLevel          Decimal         @db.Decimal(10, 2)
+  currentQty        Decimal         @db.Decimal(10, 2) @default(0)
+  tiersConsumedBy   ServiceTier[]   // e.g. [] means used by all tiers
+  vendor            Vendor?         @relation(fields: [vendorId], references: [id])
+  vendorId          String?
+  leadTimeDays      Int?
+  requisitions      Requisition[]
+  purchaseOrderItems PurchaseOrderItem[]
+  updatedAt         DateTime        @updatedAt
+
+  @@index([venture, currentQty])
+}
