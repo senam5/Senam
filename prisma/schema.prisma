@@ -312,3 +312,69 @@ model InterVentureTransfer {
 
   @@map("inter_venture_transfer")
 }
+
+// ── Sponsorship ───────────────────────────────────────────────────────
+// Le Shoe Shop sponsoring Lions Basketball (or any other cross-venture
+// sponsorship) is money flowing with terms attached — not a bare
+// transfer. Deliverables and reach snapshots are what turn "we paid
+// $X" into something you can actually justify to yourself or anyone
+// else later, instead of just a Payment record with no context.
+
+enum SponsorshipStatus {
+  PROPOSED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model SponsorshipDeal {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sponsorVenture   Venture           @map("sponsor_venture") // who's paying, e.g. LE_SHOE_SHOP
+  sponsoredVenture Venture           @map("sponsored_venture") // who's getting paid, e.g. LIONS_BASKETBALL
+  name             String
+  amount           Decimal           @db.Decimal(10, 2)
+  currency         String            @default("CAD")
+  startDate        DateTime          @map("start_date") @db.Date
+  endDate          DateTime?         @map("end_date") @db.Date
+  status           SponsorshipStatus @default(PROPOSED)
+  paid             Boolean           @default(false)
+  paidAt           DateTime?         @map("paid_at")
+  notes            String?
+  deliverables     SponsorshipDeliverable[]
+  reachSnapshots   SponsorshipReachSnapshot[]
+  createdAt        DateTime          @default(now()) @map("created_at")
+
+  @@index([sponsorVenture, sponsoredVenture, status])
+  @@map("sponsorship_deal")
+}
+
+model SponsorshipDeliverable {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deal        SponsorshipDeal  @relation(fields: [dealId], references: [id])
+  dealId      String           @map("deal_id") @db.Uuid
+  description String // e.g. "Logo on jersey", "2 Instagram posts/month", "Shoutout in game-recap videos"
+  dueDate     DateTime?        @map("due_date") @db.Date
+  completed   Boolean          @default(false)
+  completedAt DateTime?        @map("completed_at")
+
+  @@map("sponsorship_deliverable")
+}
+
+// A point-in-time reach number (e.g. "42K unique viewers / 300K views
+// over the last 3 months") tied to the deal it justifies — lets you
+// show real numbers behind the sponsorship instead of a vague "Lions
+// has a big following" claim.
+model SponsorshipReachSnapshot {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deal          SponsorshipDeal @relation(fields: [dealId], references: [id])
+  dealId        String          @map("deal_id") @db.Uuid
+  periodStart   DateTime        @map("period_start") @db.Date
+  periodEnd     DateTime        @map("period_end") @db.Date
+  uniqueViewers Int?            @map("unique_viewers")
+  totalViews    Int?            @map("total_views")
+  source        String? // e.g. "Instagram / SSVSN Media"
+  notes         String?
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  @@map("sponsorship_reach_snapshot")
+}
