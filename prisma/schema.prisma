@@ -17,14 +17,16 @@ enum Venture {
 }
 
 model Subcontractor {
-  id          String   @id @default(cuid())
-  venture     Venture
-  name        String
-  email       String?
-  phone       String?
-  commission  Decimal  @db.Decimal(5, 2) // percentage
-  orders      Order[]  @relation("SubcontractorRuns")
-  createdAt   DateTime @default(now())
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture    Venture
+  name       String
+  email      String?
+  phone      String?
+  commission Decimal? @db.Decimal(5, 2) // percentage
+  orders     Order[]  @relation("SubcontractorRuns")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("subcontractor")
 }
 
 // ── Sales domain ────────────────────────────────────────────────────
@@ -46,49 +48,52 @@ enum OrderStatus {
 }
 
 model Customer {
-  id        String   @id @default(cuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   venture   Venture
   name      String
   email     String?
   phone     String?
   address   String?
   orders    Order[]
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("customer")
 }
 
 model Order {
-  id                  String         @id @default(cuid())
-  venture             Venture
-  customer            Customer       @relation(fields: [customerId], references: [id])
-  customerId          String
-  tier                ServiceTier
-  pairCount           Int            @default(1)
-  status              OrderStatus    @default(PENDING)
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture    Venture
+  customer   Customer    @relation(fields: [customerId], references: [id])
+  customerId String      @map("customer_id") @db.Uuid
+  tier       ServiceTier
+  pairCount  Int         @default(1) @map("pair_count")
+  status     OrderStatus @default(PENDING)
 
-  pickupDistanceKm    Decimal?       @db.Decimal(5, 2)
-  pickupFee           Decimal        @default(0) @db.Decimal(6, 2)
+  pickupDistanceKm Decimal? @map("pickup_distance_km") @db.Decimal(5, 2)
+  pickupFee        Decimal  @default(0) @map("pickup_fee") @db.Decimal(6, 2)
 
-  runner              Subcontractor? @relation("SubcontractorRuns", fields: [runnerId], references: [id])
-  runnerId            String?
+  runner   Subcontractor? @relation("SubcontractorRuns", fields: [runnerId], references: [id])
+  runnerId String?        @map("runner_id") @db.Uuid
 
-  referralSource      String?
+  referralSource String? @map("referral_source")
 
-  subtotal            Decimal        @db.Decimal(8, 2)
-  volumeDiscountPct   Decimal        @default(0) @db.Decimal(4, 2)
-  tps                 Decimal        @db.Decimal(8, 2) // 5%, formula-derived — don't hardcode
-  tvq                 Decimal        @db.Decimal(8, 2) // 9.975%, formula-derived — don't hardcode
-  total               Decimal        @db.Decimal(8, 2)
+  subtotal          Decimal @db.Decimal(8, 2)
+  volumeDiscountPct Decimal @default(0) @map("volume_discount_pct") @db.Decimal(4, 2)
+  tps               Decimal @db.Decimal(8, 2) // 5%, formula-derived — don't hardcode
+  tvq               Decimal @db.Decimal(8, 2) // 9.975%, formula-derived — don't hardcode
+  total             Decimal @db.Decimal(8, 2)
 
-  items               OrderItem[]
-  payments            Payment[]
+  items    OrderItem[]
+  payments Payment[]
 
-  bookedAt            DateTime       @default(now())
-  depositPaidAt       DateTime?
-  cleanedAt           DateTime?
-  deliveredAt         DateTime?
-  paidAt              DateTime?
+  bookedAt      DateTime  @default(now()) @map("booked_at")
+  depositPaidAt DateTime? @map("deposit_paid_at")
+  cleanedAt     DateTime? @map("cleaned_at")
+  deliveredAt   DateTime? @map("delivered_at")
+  paidAt        DateTime? @map("paid_at")
 
   @@index([venture, tier, bookedAt])
+  @@map("order")
 }
 
 enum OrderItemType {
@@ -97,25 +102,29 @@ enum OrderItemType {
 }
 
 model OrderItem {
-  id        String        @id @default(cuid())
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   order     Order         @relation(fields: [orderId], references: [id])
-  orderId   String
+  orderId   String        @map("order_id") @db.Uuid
   type      OrderItemType
-  code      String        // e.g. extra_laces, insoles, sole_repair, or Product.sku
+  code      String // e.g. extra_laces, insoles, sole_repair, or Product.sku
   product   Product?      @relation(fields: [productId], references: [id])
-  productId String?
+  productId String?       @map("product_id") @db.Uuid
   quantity  Int           @default(1)
   price     Decimal       @db.Decimal(8, 2)
+
+  @@map("order_item")
 }
 
 model Product {
-  id        String      @id @default(cuid())
-  venture   Venture
-  sku       String      @unique
-  name      String
-  price     Decimal     @db.Decimal(8, 2)
-  category  String
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture    Venture
+  sku        String      @unique
+  name       String
+  price      Decimal     @db.Decimal(8, 2)
+  category   String
   orderItems OrderItem[]
+
+  @@map("product")
 }
 
 enum PaymentKind {
@@ -125,13 +134,15 @@ enum PaymentKind {
 }
 
 model Payment {
-  id                String      @id @default(cuid())
-  order             Order       @relation(fields: [orderId], references: [id])
-  orderId           String
-  kind              PaymentKind
-  amount            Decimal     @db.Decimal(8, 2)
-  stripePaymentId   String?
-  paidAt            DateTime    @default(now())
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order           Order       @relation(fields: [orderId], references: [id])
+  orderId         String      @map("order_id") @db.Uuid
+  kind            PaymentKind
+  amount          Decimal     @db.Decimal(8, 2)
+  stripePaymentId String?     @map("stripe_payment_id")
+  paidAt          DateTime    @default(now()) @map("paid_at")
+
+  @@map("payment")
 }
 
 // ── Payables domain ─────────────────────────────────────────────────
@@ -145,65 +156,75 @@ enum PayableStatus {
 }
 
 model Vendor {
-  id          String            @id @default(cuid())
-  venture     Venture
-  name        String
-  contact     String?
-  currency    String            @default("CAD") // e.g. CNY for equipment vendors — never assume CAD
-  leadTimeDays Int?
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture        Venture
+  name           String
+  contact        String?
+  currency       String          @default("CAD") // e.g. CNY for equipment vendors — never assume CAD
+  leadTimeDays   Int?            @map("lead_time_days")
   purchaseOrders PurchaseOrder[]
-  stockItems  StockItem[]
+  stockItems     StockItem[]
+
+  @@map("vendor")
 }
 
 model Requisition {
-  id          String        @id @default(cuid())
-  venture     Venture
-  stockItem   StockItem?    @relation(fields: [stockItemId], references: [id])
-  stockItemId String?
-  description String
-  quantity    Decimal       @db.Decimal(8, 2)
-  requestedBy String?
-  purchaseOrder PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
-  purchaseOrderId String?
-  createdAt   DateTime      @default(now())
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture         Venture
+  stockItem       StockItem?     @relation(fields: [stockItemId], references: [id])
+  stockItemId     String?        @map("stock_item_id") @db.Uuid
+  description     String
+  quantity        Decimal        @db.Decimal(8, 2)
+  requestedBy     String?        @map("requested_by")
+  purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+  purchaseOrderId String?        @map("purchase_order_id") @db.Uuid
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  @@map("requisition")
 }
 
 model PurchaseOrder {
-  id            String              @id @default(cuid())
-  venture       Venture
-  vendor        Vendor              @relation(fields: [vendorId], references: [id])
-  vendorId      String
-  status        PayableStatus       @default(PLANNED)
-  currency      String              @default("CAD")
-  issuedAt      DateTime?
-  expectedAt    DateTime?
-  receivedAt    DateTime?
-  requisitions  Requisition[]
-  items         PurchaseOrderItem[]
-  payable       Payable?
+  id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture      Venture
+  vendor       Vendor              @relation(fields: [vendorId], references: [id])
+  vendorId     String              @map("vendor_id") @db.Uuid
+  status       PayableStatus       @default(PLANNED)
+  currency     String              @default("CAD")
+  issuedAt     DateTime?           @map("issued_at")
+  expectedAt   DateTime?           @map("expected_at")
+  receivedAt   DateTime?           @map("received_at")
+  requisitions Requisition[]
+  items        PurchaseOrderItem[]
+  payable      Payable?
+
+  @@map("purchase_order")
 }
 
 model PurchaseOrderItem {
-  id              String        @id @default(cuid())
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
-  purchaseOrderId String
+  purchaseOrderId String        @map("purchase_order_id") @db.Uuid
   stockItem       StockItem?    @relation(fields: [stockItemId], references: [id])
-  stockItemId     String?
+  stockItemId     String?       @map("stock_item_id") @db.Uuid
   description     String
-  quantityUnits   Decimal?      @db.Decimal(10, 2) // e.g. pairs, bottles
-  quantityLiters  Decimal?      @db.Decimal(10, 2) // e.g. 40L leather product orders
-  unitPrice       Decimal       @db.Decimal(10, 2)
+  quantityUnits   Decimal?      @map("quantity_units") @db.Decimal(10, 2) // e.g. pairs, bottles
+  quantityLiters  Decimal?      @map("quantity_liters") @db.Decimal(10, 2) // e.g. 40L leather product orders
+  unitPrice       Decimal       @map("unit_price") @db.Decimal(10, 2)
+
+  @@map("purchase_order_item")
 }
 
 model Payable {
-  id              String        @id @default(cuid())
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
-  purchaseOrderId String        @unique
+  purchaseOrderId String        @unique @map("purchase_order_id") @db.Uuid
   amount          Decimal       @db.Decimal(10, 2)
   currency        String        @default("CAD")
   status          PayableStatus @default(PLANNED)
-  dueAt           DateTime?
-  paidAt          DateTime?
+  dueAt           DateTime?     @map("due_at")
+  paidAt          DateTime?     @map("paid_at")
+
+  @@map("payable")
 }
 
 // ── Stock / par levels ──────────────────────────────────────────────
@@ -216,20 +237,78 @@ model Payable {
 // no manual usage tracking required in the meantime.
 
 model StockItem {
-  id                String          @id @default(cuid())
-  venture           Venture
-  name              String
-  category          String
-  unit              String          // "pairs", "bottles", "units"
-  parLevel          Decimal         @db.Decimal(10, 2)
-  currentQty        Decimal         @db.Decimal(10, 2) @default(0)
-  tiersConsumedBy   ServiceTier[]   // e.g. [] means used by all tiers
-  vendor            Vendor?         @relation(fields: [vendorId], references: [id])
-  vendorId          String?
-  leadTimeDays      Int?
-  requisitions      Requisition[]
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture            Venture
+  name               String
+  category           String
+  unit               String // "pairs", "bottles", "units"
+  parLevel           Decimal             @map("par_level") @db.Decimal(10, 2)
+  currentQty         Decimal             @default(0) @map("current_qty") @db.Decimal(10, 2)
+  tiersConsumedBy    ServiceTier[]       @map("tiers_consumed_by") // empty = used by all tiers
+  vendor             Vendor?             @relation(fields: [vendorId], references: [id])
+  vendorId           String?             @map("vendor_id") @db.Uuid
+  leadTimeDays       Int?                @map("lead_time_days")
+  requisitions       Requisition[]
   purchaseOrderItems PurchaseOrderItem[]
-  updatedAt         DateTime        @updatedAt
+  updatedAt          DateTime            @updatedAt @map("updated_at")
 
   @@index([venture, currentQty])
+  @@map("stock_item")
+}
+
+// ── Expense reconciliation ───────────────────────────────────────────
+// Mirrors the informal "Dépenses / Payables" Notion ledger, plus the
+// two fields that ledger never had: which pocket the money actually
+// came from (paymentSource), and whether the owner has been paid back
+// for a personally-funded purchase (reimbursed).
+
+enum PaymentSource {
+  BUSINESS_ACCOUNT
+  PERSONAL_DEBIT
+  PERSONAL_CREDIT
+  CASH
+  TRANSFER
+}
+
+enum DeductibleStatus {
+  YES
+  NO
+  PARTIAL
+}
+
+model Expense {
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture       Venture
+  description   String
+  category      String
+  spentOn       DateTime          @map("spent_on") @db.Date
+  amountHT      Decimal           @map("amount_ht") @db.Decimal(10, 2)
+  tps           Decimal           @default(0) @db.Decimal(10, 2)
+  tvq           Decimal           @default(0) @db.Decimal(10, 2)
+  totalPaid     Decimal           @map("total_paid") @db.Decimal(10, 2)
+  vendor        String?
+  paymentSource PaymentSource     @map("payment_source")
+  deductible    DeductibleStatus?
+  reimbursed    Boolean           @default(false)
+  reimbursedAt  DateTime?         @map("reimbursed_at")
+  notes         String?
+  createdAt     DateTime          @default(now()) @map("created_at")
+
+  @@index([venture, reimbursed])
+  @@map("expense")
+}
+
+// Money that crosses venture lines (e.g. Lions -> Le Shoe Shop) needs
+// to be recorded once and mirrored on both sides' books, not left as
+// a single unmatched row on whichever side happened to log it.
+model InterVentureTransfer {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fromVenture   Venture  @map("from_venture")
+  toVenture     Venture  @map("to_venture")
+  amount        Decimal  @db.Decimal(10, 2)
+  transferredOn DateTime @map("transferred_on") @db.Date
+  reason        String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("inter_venture_transfer")
 }

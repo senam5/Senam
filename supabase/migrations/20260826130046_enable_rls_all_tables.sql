@@ -1,0 +1,14 @@
+alter table subcontractor enable row level security;
+alter table customer enable row level security;
+alter table "order" enable row level security;
+alter table product enable row level security;
+alter table order_item enable row level security;
+alter table payment enable row level security;
+alter table vendor enable row level security;
+alter table stock_item enable row level security;
+alter table requisition enable row level security;
+alter table purchase_order enable row level security;
+alter table purchase_order_item enable row level security;
+alter table payable enable row level security;
+alter table expense enable row level security;
+alter table inter_venture_transfer enable row level security;
