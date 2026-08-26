@@ -77,6 +77,9 @@ model Order {
 
   referralSource String? @map("referral_source")
 
+  campaign   Campaign? @relation(fields: [campaignId], references: [id])
+  campaignId String?   @map("campaign_id") @db.Uuid
+
   subtotal          Decimal @db.Decimal(8, 2)
   volumeDiscountPct Decimal @default(0) @map("volume_discount_pct") @db.Decimal(4, 2)
   tps               Decimal @db.Decimal(8, 2) // 5%, formula-derived — don't hardcode
@@ -342,6 +345,7 @@ model SponsorshipDeal {
   notes            String?
   deliverables     SponsorshipDeliverable[]
   reachSnapshots   SponsorshipReachSnapshot[]
+  campaigns        Campaign[]
   createdAt        DateTime          @default(now()) @map("created_at")
 
   @@index([sponsorVenture, sponsoredVenture, status])
@@ -377,4 +381,56 @@ model SponsorshipReachSnapshot {
   createdAt     DateTime        @default(now()) @map("created_at")
 
   @@map("sponsorship_reach_snapshot")
+}
+
+// ── Marketing attribution ─────────────────────────────────────────────
+// Last-touch attribution only (a single campaignId per Order) — enough
+// to start with given the current manual bit.ly + Notion tracking.
+// A Campaign can optionally point at the SponsorshipDeal that funds it,
+// so a Shoe Shop order that came from Lions content is traceable back
+// to the sponsorship that produced it, not just a free-text label.
+
+enum CampaignChannel {
+  META_ADS
+  GOOGLE_ADS
+  INSTAGRAM_ORGANIC
+  SPONSORSHIP
+  REFERRAL
+  OTHER
+}
+
+enum CampaignStatus {
+  PLANNED
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+model Campaign {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venture          Venture
+  channel          CampaignChannel
+  name             String
+  budget           Decimal?          @db.Decimal(10, 2)
+  startDate        DateTime?         @map("start_date") @db.Date
+  endDate          DateTime?         @map("end_date") @db.Date
+  status           CampaignStatus    @default(PLANNED)
+  sponsorshipDeal  SponsorshipDeal?  @relation(fields: [sponsorshipDealId], references: [id])
+  sponsorshipDealId String?          @map("sponsorship_deal_id") @db.Uuid
+  orders           Order[]
+  adSpend          AdSpend[]
+  createdAt        DateTime          @default(now()) @map("created_at")
+
+  @@map("campaign")
+}
+
+model AdSpend {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  campaignId String   @map("campaign_id") @db.Uuid
+  spentOn    DateTime @map("spent_on") @db.Date
+  amount     Decimal  @db.Decimal(10, 2)
+  channel    CampaignChannel
+
+  @@map("ad_spend")
 }
