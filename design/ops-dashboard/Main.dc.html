@@ -1,0 +1,303 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root {
+      --bg: oklch(97.5% 0.006 80);
+      --surface: oklch(99% 0.003 80);
+      --border: oklch(89% 0.006 80);
+      --text: oklch(24% 0.02 264);
+      --text-muted: oklch(48% 0.015 264);
+      --text-faint: oklch(62% 0.012 264);
+      --accent: oklch(58% 0.14 55);
+      --accent-soft: oklch(93% 0.03 55);
+      --accent-text: oklch(32% 0.09 50);
+      --good: oklch(58% 0.13 150);
+      --good-soft: oklch(93% 0.045 150);
+      --warn: oklch(58% 0.18 40);
+      --warn-soft: oklch(93% 0.05 40);
+      --bad: oklch(55% 0.19 25);
+      --bad-soft: oklch(93% 0.045 25);
+      --info: oklch(55% 0.09 250);
+      --info-soft: oklch(93% 0.02 250);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); font-family: 'IBM Plex Sans', system-ui, sans-serif; color: var(--text); }
+    a { color: var(--accent-text); text-decoration: none; }
+    a:hover { color: var(--accent); }
+    .num { font-family: 'Space Grotesk', system-ui, sans-serif; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; padding: 28px 32px 40px; display: flex; flex-direction: column; gap: 20px;">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+      <div style="font-family: 'Space Grotesk', system-ui, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -0.02em;">Le Shoe Shop — Operations</div>
+      <div style="font-size: 13px; color: var(--text-faint);">Wednesday, August 26 · everything that matters on one screen</div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 108px;">
+        <div class="num" style="font-size: 20px; font-weight: 600;">7</div>
+        <div style="font-size: 11px; color: var(--text-faint);">active orders</div>
+      </div>
+      <div style="background: var(--bad-soft); border: 1px solid var(--bad); border-radius: 10px; padding: 10px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 108px;">
+        <div class="num" style="font-size: 20px; font-weight: 600; color: var(--bad);">3</div>
+        <div style="font-size: 11px; color: var(--bad);">items at/below par</div>
+      </div>
+      <div style="background: var(--info-soft); border: 1px solid var(--info); border-radius: 10px; padding: 10px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 108px;">
+        <div class="num" style="font-size: 20px; font-weight: 600; color: var(--info);">4</div>
+        <div style="font-size: 11px; color: var(--info);">deliveries today</div>
+      </div>
+      <div style="background: var(--warn-soft); border: 1px solid var(--warn); border-radius: 10px; padding: 10px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 108px;">
+        <div class="num" style="font-size: 20px; font-weight: 600; color: var(--warn);">$122.52</div>
+        <div style="font-size: 11px; color: var(--warn);">owed to owner</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Orders pipeline ────────────────────────────────────── -->
+  <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px;">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8"><path d="M4 8h16l-1.5 11a2 2 0 0 1-2 1.7H7.5a2 2 0 0 1-2-1.7L4 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+        <span style="font-family: 'Space Grotesk', system-ui, sans-serif; font-weight: 600; font-size: 16px;">Orders</span>
+      </div>
+      <div style="display: flex; gap: 16px; font-size: 12px; color: var(--text-faint);">
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--accent);margin-right:5px;"></span>Refresh · $35 · 24h</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--info);margin-right:5px;"></span>Reset · $60 · 48h</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--good);margin-right:5px;"></span>Renew · $90 · 72h</span>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px;">
+
+      <!-- Pending -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); padding: 0 2px;">Pending · 2</div>
+        <div style="background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 13px; font-weight: 600;">M. Tremblay</div>
+          <div style="font-size: 11px; color: var(--text-faint); margin-top: 2px;">Refresh · 1 pr · Sainte-Foy</div>
+        </div>
+        <div style="background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--good); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 13px; font-weight: 600;">J. Bouchard</div>
+          <div style="font-size: 11px; color: var(--text-faint); margin-top: 2px;">Renew · 2 pr · Lévis</div>
+        </div>
+      </div>
+
+      <!-- Deposit paid -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); padding: 0 2px;">Deposit paid · 1</div>
+        <div style="background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--info); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 13px; font-weight: 600;">A. Roy</div>
+          <div style="font-size: 11px; color: var(--text-faint); margin-top: 2px;">Reset · 1 pr · Beauport</div>
+        </div>
+      </div>
+
+      <!-- In progress -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); padding: 0 2px;">In progress · 2</div>
+        <div style="background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 13px; font-weight: 600;">S. Gagné</div>
+          <div style="font-size: 11px; color: var(--text-faint); margin-top: 2px;">Refresh · 1 pr · Charlesbourg</div>
+        </div>
+        <div style="background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--info); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 13px; font-weight: 600;">P. Côté</div>
+          <div style="font-size: 11px; color: var(--text-faint); margin-top: 2px;">Reset · 3 pr · Québec</div>
+        </div>
+      </div>
+
+      <!-- Cleaned -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); padding: 0 2px;">Cleaned · 1</div>
+        <div style="background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--good); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 13px; font-weight: 600;">L. Fortin</div>
+          <div style="font-size: 11px; color: var(--text-faint); margin-top: 2px;">Renew · 1 pr · L'Ancienne-Lorette</div>
+        </div>
+      </div>
+
+      <!-- Delivered -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); padding: 0 2px;">Delivered · 1</div>
+        <div style="background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 13px; font-weight: 600;">N. Dubé</div>
+          <div style="font-size: 11px; color: var(--text-faint); margin-top: 2px;">Refresh · 1 pr · balance due</div>
+        </div>
+      </div>
+
+      <!-- Paid -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); padding: 0 2px;">Paid · 12 <span style="color: var(--text-faint); font-weight: 400; text-transform: none;">this month</span></div>
+        <div style="background: var(--bg); border: 1px dashed var(--border); border-radius: 8px; padding: 10px; display: flex; align-items: center; justify-content: center; height: 100%; min-height: 56px;">
+          <span style="font-size: 11px; color: var(--text-faint);">closed orders archive →</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Inventory + Deliveries row ─────────────────────────── -->
+  <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px;">
+
+    <!-- Inventory -->
+    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px;">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
+        <span style="font-family: 'Space Grotesk', system-ui, sans-serif; font-weight: 600; font-size: 16px;">Inventory · par levels</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+
+        <!-- row template: name, qty/par, bar -->
+        <div style="display: grid; grid-template-columns: 150px 1fr 90px; align-items: center; gap: 14px;">
+          <div style="font-size: 13px; font-weight: 500;">Laces (std. round)</div>
+          <div style="height: 8px; border-radius: 5px; background: var(--border); position: relative; overflow: hidden;">
+            <div style="position: absolute; inset: 0 65% 0 0; background: var(--bad); border-radius: 5px;"></div>
+          </div>
+          <div style="font-size: 12px; text-align: right; color: var(--bad); font-weight: 600;">7 / 20 pr</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 150px 1fr 90px; align-items: center; gap: 14px;">
+          <div style="font-size: 13px; font-weight: 500;">Cleaning solution</div>
+          <div style="height: 8px; border-radius: 5px; background: var(--border); position: relative; overflow: hidden;">
+            <div style="position: absolute; inset: 0 25% 0 0; background: var(--good); border-radius: 5px;"></div>
+          </div>
+          <div style="font-size: 12px; text-align: right; color: var(--text-muted);">3 / 4 btl</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 150px 1fr 90px; align-items: center; gap: 14px;">
+          <div style="font-size: 13px; font-weight: 500;">Sole/scrub brushes</div>
+          <div style="height: 8px; border-radius: 5px; background: var(--border); position: relative; overflow: hidden;">
+            <div style="position: absolute; inset: 0 15% 0 0; background: var(--good); border-radius: 5px;"></div>
+          </div>
+          <div style="font-size: 12px; text-align: right; color: var(--text-muted);">3 / 4 un.</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 150px 1fr 90px; align-items: center; gap: 14px;">
+          <div style="font-size: 13px; font-weight: 500;">Deodorizer (NMIR)</div>
+          <div style="height: 8px; border-radius: 5px; background: var(--border); position: relative; overflow: hidden;">
+            <div style="position: absolute; inset: 0 83% 0 0; background: var(--bad); border-radius: 5px;"></div>
+          </div>
+          <div style="font-size: 12px; text-align: right; color: var(--bad); font-weight: 600;">1 / 6 btl</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 150px 1fr 90px; align-items: center; gap: 14px;">
+          <div style="font-size: 13px; font-weight: 500;">Crease protectors</div>
+          <div style="height: 8px; border-radius: 5px; background: var(--border); position: relative; overflow: hidden;">
+            <div style="position: absolute; inset: 0 47% 0 0; background: var(--warn); border-radius: 5px;"></div>
+          </div>
+          <div style="font-size: 12px; text-align: right; color: var(--warn); font-weight: 600;">8 / 15 pr</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 150px 1fr 90px; align-items: center; gap: 14px;">
+          <div style="font-size: 13px; font-weight: 500;">Waterproof spray</div>
+          <div style="height: 8px; border-radius: 5px; background: var(--border); position: relative; overflow: hidden;">
+            <div style="position: absolute; inset: 0 90% 0 0; background: var(--bad); border-radius: 5px;"></div>
+          </div>
+          <div style="font-size: 12px; text-align: right; color: var(--bad); font-weight: 600;">0.4 / 4 btl</div>
+        </div>
+
+      </div>
+
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 11px; color: var(--bad); display: flex; align-items: center; gap: 6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        Laces, deodorizer and waterproof spray are at or below par — reorder this week
+      </div>
+    </div>
+
+    <!-- Deliveries -->
+    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px;">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg>
+        <span style="font-family: 'Space Grotesk', system-ui, sans-serif; font-weight: 600; font-size: 16px;">Deliveries — this week</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+
+        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint);">Today · Sainte-Foy / Lévis run</div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border);">
+          <div style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--good); background: var(--good-soft); flex-shrink: 0;"></div>
+          <div style="flex: 1; font-size: 13px;">M. Tremblay — Sainte-Foy</div>
+          <div style="font-size: 11px; color: var(--text-faint);">pickup done</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border);">
+          <div style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0;"></div>
+          <div style="flex: 1; font-size: 13px;">J. Bouchard — Lévis</div>
+          <div style="font-size: 11px; color: var(--text-faint);">pickup pending</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border);">
+          <div style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0;"></div>
+          <div style="flex: 1; font-size: 13px;">N. Dubé — Sainte-Foy</div>
+          <div style="font-size: 11px; color: var(--text-faint);">delivery, balance due</div>
+        </div>
+
+        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); margin-top: 6px;">Thursday · Beauport / Charlesbourg run</div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0;">
+          <div style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0;"></div>
+          <div style="flex: 1; font-size: 13px;">A. Roy — Beauport</div>
+          <div style="font-size: 11px; color: var(--text-faint);">delivery</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0;">
+          <div style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0;"></div>
+          <div style="flex: 1; font-size: 13px;">S. Gagné — Charlesbourg</div>
+          <div style="font-size: 11px; color: var(--text-faint);">pickup</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Annex: sponsorship + reimbursement, de-emphasized ──── -->
+  <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; opacity: 0.92;">
+
+    <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.8"><path d="M8 21h8M12 17v4M6 4h12v3a6 6 0 0 1-12 0V4Z"/><path d="M6 5H3v2a4 4 0 0 0 4 4M18 5h3v2a4 4 0 0 1-4 4"/></svg>
+          <span style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Annexe — Sponsorship (Lions Basketball)</span>
+        </div>
+        <span style="font-size: 11px; color: var(--text-faint);">42K unique viewers · 300K views / 3 mo</span>
+      </div>
+      <div style="display: flex; gap: 24px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 12px; color: var(--text-faint);">vs Cegep Levis</span>
+          <span style="font-size: 11px; color: var(--text-faint);">·</span>
+          <span class="num" style="font-size: 12px; font-weight: 600;">$80 cost</span>
+          <span style="font-size: 10px; padding: 2px 7px; border-radius: 999px; background: var(--border); color: var(--text-faint);">not sponsored</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 12px; color: var(--text-faint);">SLC vs UK Cut</span>
+          <span style="font-size: 11px; color: var(--text-faint);">·</span>
+          <span class="num" style="font-size: 12px; font-weight: 600;">$45 cost</span>
+          <span style="font-size: 10px; padding: 2px 7px; border-radius: 999px; background: var(--border); color: var(--text-faint);">not sponsored</span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-faint); font-style: italic;">"Lions Basketball powered by Le Shoe Shop" — tagline on file, deal amount TBD</div>
+      </div>
+    </div>
+
+    <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5c0-1.4 1.1-2.3 2.5-2.3s2.5.8 2.5 2c0 2.3-5 1.8-5 4.3 0 1.3 1.1 2.3 2.5 2.3s2.5-.9 2.5-2.3"/></svg>
+        <span style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Owner reimbursement</span>
+      </div>
+      <span class="num" style="font-size: 15px; font-weight: 600; color: var(--warn);">$122.52</span>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>

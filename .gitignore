@@ -1,2 +1,6 @@
 node_modules/
 .env
+
+# Seeded design-canvas output (built from the .dc.html/canvas.json sources
+# via the design skill's seed-canvas.mjs) — not worth versioning.
+design/ops-dashboard/le-shoe-shop-ops-dashboard.html
