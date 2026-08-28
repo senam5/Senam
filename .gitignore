@@ -4,3 +4,7 @@ node_modules/
 # Seeded design-canvas output (built from the .dc.html/canvas.json sources
 # via the design skill's seed-canvas.mjs) — not worth versioning.
 design/ops-dashboard/le-shoe-shop-ops-dashboard.html
+
+# Generated customer receipts contain real names/addresses/emails —
+# never belongs in version control.
+design/receipts/
