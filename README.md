@@ -1,5 +1,9 @@
 # Senam — cross-venture ops & finance backend
 
+**Lost track of priorities across all this?** See `ROADMAP.md` — the
+one thing that's actually urgent, what's running on its own slow track,
+and what's correctly parked for later.
+
 Data model and automation backing Le Shoe Shop (and, where money crosses
 lines, Lions Basketball). Schema lives in `prisma/schema.prisma`; the
 source of truth at runtime is the `le-shoe-shop` Supabase project
